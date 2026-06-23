@@ -1,0 +1,157 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CRATE_NAME: d3vlog
+  FORMULA_PATH: Formula/devlog.rb
+
+jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust stable
+        run: |
+          set -euo pipefail
+
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup component add rustfmt clippy
+
+      - name: Check tag matches Cargo.toml version
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must look like vMAJOR.MINOR.PATCH, got: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CARGO_VERSION="$(cargo metadata --no-deps --format-version 1 |
+              jq -r --arg name "$CRATE_NAME" '.packages[] | select(.name == $name) | .version'
+          )"
+
+          if [[ -z "$CARGO_VERSION" ]]; then
+            echo "Could not find package named '$CRATE_NAME' in cargo metadata" >&2
+            exit 1
+          fi
+
+          echo "Git tag:      $TAG_VERSION"
+          echo "Cargo.toml:   $CARGO_VERSION"
+
+          test "$TAG_VERSION" = "$CARGO_VERSION"
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Test
+        run: cargo test --all-targets --all-features
+
+      - name: Package dry run
+        run: cargo publish --dry-run --locked --package "$CRATE_NAME"
+
+  publish-crate:
+    name: Publish to crates.io
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: release
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust stable
+        run: |
+          set -euo pipefail
+
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Authenticate with crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@v1
+
+      - name: Publish crate
+        run: cargo publish --locked --package "$CRATE_NAME"
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+  update-homebrew:
+    name: Update Homebrew tap
+    needs: publish-crate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Compute source archive SHA256
+        id: archive
+        run: |
+          set -euo pipefail
+
+          URL="https://github.com/w3lt/devlog/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz"
+          SHA256="$(curl -fsSL "$URL" | shasum -a 256 | awk '{print $1}')"
+
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Homebrew tap
+        uses: actions/checkout@v7
+        with:
+          repository: w3lt/homebrew-devlog
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-devlog
+
+      - name: Update formula
+        run: |
+          set -euo pipefail
+
+          cd homebrew-devlog
+
+          export URL="${{ steps.archive.outputs.url }}"
+          export SHA256="${{ steps.archive.outputs.sha256 }}"
+
+          perl -0pi -e 's|^  url ".*"$|  url "$ENV{URL}"|m; s|^  sha256 ".*"$|  sha256 "$ENV{SHA256}"|m' "$FORMULA_PATH"
+
+          grep -F "  url \"$URL\"" "$FORMULA_PATH"
+          grep -F "  sha256 \"$SHA256\"" "$FORMULA_PATH"
+
+          git diff -- "$FORMULA_PATH"
+
+      - name: Commit and push formula update
+        run: |
+          set -euo pipefail
+
+          cd homebrew-devlog
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add "$FORMULA_PATH"
+
+          if git diff --cached --quiet; then
+            echo "No formula changes"
+            exit 0
+          fi
+
+          git commit -m "devlog ${GITHUB_REF_NAME#v}" || exit 0
+          git push
