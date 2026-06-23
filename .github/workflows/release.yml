@@ -130,6 +130,28 @@ jobs:
           export URL="${{ steps.archive.outputs.url }}"
           export SHA256="${{ steps.archive.outputs.sha256 }}"
 
+          if [[ ! -f "$FORMULA_PATH" ]]; then
+            cat > "$FORMULA_PATH" <<RUBY
+              class Devlog < Formula
+              desc "A tiny developer journal that lives in your terminal"
+              homepage "https://github.com/w3lt/devlog"
+              url "$URL"
+              sha256 "$SHA256"
+              license "Apache-2.0"
+
+              depends_on "rust" => :build
+
+              def install
+                system "cargo", "install", *std_cargo_args(path: ".")
+              end
+
+              test do
+                  assert_match "devlog", shell_output("#{bin}/devlog --help")
+                end
+              end
+            RUBY
+          fi
+
           perl -0pi -e 's|^  url ".*"$|  url "$ENV{URL}"|m; s|^  sha256 ".*"$|  sha256 "$ENV{SHA256}"|m' "$FORMULA_PATH"
 
           grep -F "  url \"$URL\"" "$FORMULA_PATH"
