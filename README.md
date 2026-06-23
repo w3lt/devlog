@@ -60,7 +60,7 @@ That is the whole ritual. Type the note, hit enter, get back to work.
 ### From crates.io
 
 ```bash
-cargo install d3vlog
+cargo install d3vlog --locked
 ```
 
 > The crate is published as **`d3vlog`**, but it installs a binary named **`devlog`**.
