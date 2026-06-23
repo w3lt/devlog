@@ -1,6 +1,10 @@
 [package]
 name = "devlog"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 
 [dependencies]
+chrono = "0.4.45"
+clap = { version = "4.6.1", features = ["derive"] }
+rusqlite = { version = "0.40.1", features = ["bundled"] }
+uuid = { version = "1.23.3", features = ["v7"] }
