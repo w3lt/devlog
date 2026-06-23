@@ -1,7 +1,18 @@
 [package]
-name = "devlog"
+name = "d3vlog"
 version = "0.2.0"
 edition = "2024"
+description = "Small CLI tool to manage daily work"
+license = "Apache-2.0"
+repository = "https://github.com/w3lt/devlog"
+homepage = "https://github.com/w3lt/devlog"
+readme = "README.md"
+keywords = ["cli", "journal", "sqlite", "developer"]
+categories = ["command-line-utilities"]
+
+[[bin]]
+name = "devlog"
+path = "src/main.rs"
 
 [dependencies]
 chrono = "0.4.45"
