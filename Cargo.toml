@@ -5,7 +5,6 @@ edition = "2024"
 description = "Small CLI tool to manage daily work"
 license = "Apache-2.0"
 repository = "https://github.com/w3lt/devlog"
-homepage = "https://github.com/w3lt/devlog"
 readme = "README.md"
 keywords = ["cli", "journal", "sqlite", "developer"]
 categories = ["command-line-utilities"]
