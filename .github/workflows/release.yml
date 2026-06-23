@@ -149,7 +149,7 @@ jobs:
                   assert_match "devlog", shell_output("#{bin}/devlog --help")
                 end
               end
-            RUBY
+          RUBY
           fi
 
           perl -0pi -e 's|^  url ".*"$|  url "$ENV{URL}"|m; s|^  sha256 ".*"$|  sha256 "$ENV{SHA256}"|m' "$FORMULA_PATH"
