@@ -1,21 +1,13 @@
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 #[command(
     name = "devlog",
-    disable_version_flag = true,
     version = version_text(),
+    long_version = version_text(),
     about = "A tiny developer journal for the terminal"
 )]
 pub struct Cli {
-    #[arg(
-        short = 'v',
-        long = "version",
-        action = ArgAction::Version,
-        help = "Print version information"
-    )]
-    pub version: bool,
-
     #[command(subcommand)]
     pub command: Command,
 }
