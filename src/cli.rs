@@ -2,6 +2,8 @@ use clap::{Parser, Subcommand};
 
 use crate::data::status::DevLogEntryStatus;
 
+pub mod commands;
+
 #[derive(Debug, Parser)]
 #[command(
     name = "devlog",
