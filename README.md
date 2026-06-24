@@ -3,7 +3,7 @@
 <img src="assets/hero.svg" width="820" alt="devlog — a tiny developer journal that lives in your terminal" />
 
 <p>
-  <img src="https://img.shields.io/badge/version-0.2.0-3b82f6?style=flat-square" alt="version" />
+  <img src="https://img.shields.io/badge/version-0.7.0-3b82f6?style=flat-square" alt="version" />
   <img src="https://img.shields.io/badge/license-Apache--2.0-22c55e?style=flat-square" alt="license" />
   <img src="https://img.shields.io/badge/Rust-2024_edition-f59e0b?style=flat-square&logo=rust&logoColor=white" alt="Rust 2024 edition" />
   <img src="https://img.shields.io/badge/storage-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite storage" />
@@ -48,10 +48,11 @@ That is the whole ritual. Type the note, hit enter, get back to work.
 | | |
 |---|---|
 | 📓 **Frictionless capture** | One short command — `devlog add "…"` — and the thought is saved. |
-| 📜 **Full history at a glance** | `devlog list` replays every entry, oldest to newest. |
+| 📜 **Full history at a glance** | `devlog list` groups every entry by day, most recent day first. |
+| ✅ **Track each entry's state** | Move items between `in_progress`, `done`, and `cancelled` with `devlog set-status`. |
 | 🗃️ **Local-first SQLite** | Your journal lives in `~/.devlog/entries.sqlite`. No cloud, no account. |
 | 🆔 **Time-ordered UUID v7** | IDs encode creation time, so entries sort naturally by when they happened. |
-| 🕓 **Honest timestamps** | Stored in UTC (RFC 3339) and shown as `YYYY-MM-DD HH:MM UTC`. |
+| 🕓 **Honest timestamps** | Stored in UTC (RFC 3339), shown in your local time when you `list`. |
 | 🦀 **One small binary** | SQLite is bundled at build time — nothing to install alongside it. |
 | 🔒 **Quiet by design** | No telemetry, no background process, no network. |
 
@@ -86,9 +87,10 @@ A tiny developer journal for the terminal
 Usage: devlog <COMMAND>
 
 Commands:
-  add   Add a new journal entry
-  list  List journal entries
-  help  Print this message or the help of the given subcommand(s)
+  add         Add a new journal entry
+  list        List journal entries
+  set-status  Set status of entry
+  help        Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help     Print help
@@ -98,7 +100,8 @@ Options:
 | Command | What it does | Example |
 |---|---|---|
 | `devlog add <message>` | Append a new entry, stamped with the current UTC time. | `devlog add "Cut the v0.2 release"` |
-| `devlog list` | Print every entry in creation order. | `devlog list` |
+| `devlog list` | Print every entry, grouped by day (newest day first). | `devlog list` |
+| `devlog set-status <id> <status>` | Set an entry's status to `in_progress`, `done`, or `cancelled`. | `devlog set-status <id> done` |
 | `devlog --version` | Show the installed version. | `devlog --version` |
 | `devlog --help` | Show help (works on subcommands too). | `devlog add --help` |
 
@@ -112,12 +115,38 @@ $ devlog add "Fix flaky test in store.rs"
 Added item "Fix flaky test in store.rs"!
 
 $ devlog list
-[2026-06-23 09:14 UTC] 0190a1b2 Ship the new auth flow
-[2026-06-23 11:02 UTC] 0190a3c4 Fix flaky test in store.rs
+Wednesday, 2026-06-24 · 2 entries
+
+  [~] 09:14  Ship the new auth flow
+      id: 019efa5e-5f23-70b3-b4d3-f5f1643764a3
+
+  [~] 11:02  Fix flaky test in store.rs
+      id: 019efa5e-5f2a-7eb0-9ed7-9980495715a5
+
+$ devlog set-status 019efa5e-5f23-70b3-b4d3-f5f1643764a3 done
+Set status of item 019efa5e-5f23-70b3-b4d3-f5f1643764a3 to be Done
+
+$ devlog list
+Wednesday, 2026-06-24 · 2 entries
+
+  [✓] 09:14  Ship the new auth flow
+      id: 019efa5e-5f23-70b3-b4d3-f5f1643764a3
+
+  [~] 11:02  Fix flaky test in store.rs
+      id: 019efa5e-5f2a-7eb0-9ed7-9980495715a5
 ```
 
-Each `list` line is `[<created_at> UTC] <short-id> <message>`, where the short
-id is the first 8 characters of the entry's UUID v7.
+Entries are grouped under a day header — `<weekday>, <YYYY-MM-DD> · <count>` —
+with the most recent day first. Within a day, each entry shows a status marker,
+its local `HH:MM` time, and the message, followed by the full UUID on an
+indented `id:` line:
+
+- `[~]` — in progress (the state every new entry starts in)
+- `[✓]` — done
+- `[x]` — cancelled
+
+Move an entry between states with `devlog set-status <id> <status>`, passing the
+full id from the `list` output and one of `in_progress`, `done`, or `cancelled`.
 
 ## How your data is stored
 
@@ -133,7 +162,9 @@ The schema is a single table:
 CREATE TABLE IF NOT EXISTS devlog_entries (
     id          TEXT PRIMARY KEY NOT NULL,
     created_at  TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
-    message     TEXT NOT NULL CHECK (length(trim(message)) > 0)
+    message     TEXT NOT NULL CHECK (length(trim(message)) > 0),
+    status      TEXT NOT NULL DEFAULT 'in_progress'
+                CHECK (status IN ('in_progress', 'done', 'cancelled'))
 );
 ```
 
@@ -142,12 +173,17 @@ CREATE TABLE IF NOT EXISTS devlog_entries (
 | `id` | `TEXT` | UUID v7 — time-ordered, generated per entry. |
 | `created_at` | `TEXT` | UTC timestamp in RFC 3339; the `CHECK` rejects anything SQLite can't parse as a datetime. |
 | `message` | `TEXT` | The note. Must be non-empty after trimming whitespace. |
+| `status` | `TEXT` | Lifecycle state — one of `in_progress` (the default for new entries), `done`, or `cancelled`. |
+
+The schema is versioned (via SQLite's `PRAGMA user_version`), so existing
+journals are migrated in place when you upgrade `devlog` — the `status` column
+was added this way.
 
 Because it is plain SQLite, you can always inspect or back up your journal with
 ordinary tools:
 
 ```bash
-sqlite3 ~/.devlog/entries.sqlite "SELECT created_at, message FROM devlog_entries;"
+sqlite3 ~/.devlog/entries.sqlite "SELECT created_at, status, message FROM devlog_entries;"
 ```
 
 ## Project layout
@@ -157,11 +193,12 @@ devlog/
 ├── Cargo.toml          # crate: d3vlog · binary: devlog
 └── src/
     ├── main.rs         # entry point — parse args, dispatch commands
-    ├── cli.rs          # clap definitions for `add` and `list`
-    ├── store.rs        # SQLite connection, schema, reads & writes
+    ├── cli.rs          # clap definitions for `add`, `list`, and `set-status`
+    ├── store.rs        # SQLite connection, schema migrations, reads & writes
     ├── data.rs         # data module root
     └── data/
-        └── entry.rs    # DevLogEntry model + display formatting
+        ├── entry.rs    # DevLogEntry model + display formatting
+        └── status.rs   # DevLogEntryStatus enum + parsing & rendering
 ```
 
 The dependencies are intentionally few:
