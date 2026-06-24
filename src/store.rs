@@ -1,9 +1,14 @@
 use std::{env, io, path::PathBuf};
 
 use chrono::{DateTime, Utc};
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 
-use crate::data::{entry::DevLogEntry, status::DevLogEntryStatus};
+use crate::{
+    data::{entry::DevLogEntry, status::DevLogEntryStatus},
+    store::result::SetStatusResult,
+};
+
+pub mod result;
 
 pub struct Store {
     connection: Connection,
@@ -131,8 +136,35 @@ impl Store {
         entries.collect()
     }
 
-    pub fn set_status(&self, id: &str, status: &DevLogEntryStatus) -> rusqlite::Result<bool> {
-        let updated_rows = self.connection.execute(
+    pub fn set_status(
+        &self,
+        id: &str,
+        status: &DevLogEntryStatus,
+    ) -> rusqlite::Result<SetStatusResult> {
+        let current_status: Option<String> = self
+            .connection
+            .query_row(
+                "
+                SELECT status
+                FROM devlog_entries
+                WHERE id = ?1
+            ",
+                [id],
+                |row| row.get("status"),
+            )
+            .optional()?;
+
+        let Some(current_status) = current_status else {
+            return Ok(SetStatusResult::NotFound);
+        };
+
+        let new_status = status.to_db_value();
+
+        if current_status == new_status {
+            return Ok(SetStatusResult::NoChange);
+        }
+
+        self.connection.execute(
             "
                 UPDATE devlog_entries
                 SET status = ?1
@@ -142,7 +174,7 @@ impl Store {
             (status.to_db_value(), id),
         )?;
 
-        Ok(updated_rows == 1)
+        Ok(SetStatusResult::Updated)
     }
 }
 

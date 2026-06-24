@@ -3,7 +3,7 @@ use std::io;
 use crate::{
     cli::{Cli, Command},
     data::entry::DevLogEntry,
-    store::Store,
+    store::{Store, result::SetStatusResult},
 };
 use chrono::{Local, NaiveDate};
 use clap::Parser;
@@ -75,13 +75,18 @@ fn main() -> io::Result<()> {
             Err(e) => Err(io::Error::other(e)),
         },
         Command::SetStatus { id, status } => match store.set_status(&id, &status) {
-            Ok(success) => {
-                if success {
-                    println!("Set status of item {} to be {}", id, status);
-                } else {
-                    println!("Item {} is already {}", id, status);
+            Ok(result) => {
+                match result {
+                    SetStatusResult::Updated => {
+                        println!("Set status of item {} to be {}", id, status);
+                    }
+                    SetStatusResult::NoChange => {
+                        println!("Item {} is already {}", id, status);
+                    }
+                    SetStatusResult::NotFound => {
+                        println!("Item {} not found!", id);
+                    }
                 }
-
                 Ok(())
             }
             Err(e) => Err(io::Error::other(e)),
