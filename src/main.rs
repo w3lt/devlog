@@ -5,6 +5,7 @@ use crate::{
     data::entry::DevLogEntry,
     store::Store,
 };
+use chrono::{Local, NaiveDate};
 use clap::Parser;
 
 mod cli;
@@ -28,9 +29,59 @@ fn main() -> io::Result<()> {
         }
         Command::List => match store.get_entries() {
             Ok(entries) => {
-                for e in entries {
-                    println!("{}", e);
+                let mut groups: Vec<(NaiveDate, Vec<DevLogEntry>)> = Vec::new();
+
+                for entry in entries {
+                    let local_time = entry.created_at.with_timezone(&Local);
+                    let day = local_time.date_naive();
+
+                    match groups.last_mut() {
+                        Some((current_day, day_entries)) if *current_day == day => {
+                            day_entries.push(entry);
+                        }
+                        _ => {
+                            groups.push((day, vec![entry]));
+                        }
+                    }
                 }
+
+                for (day, day_entries) in groups.iter().rev() {
+                    let entry_count = day_entries.len();
+                    println!(
+                        "{} · {} {}",
+                        day.format("%A, %Y-%m-%d"),
+                        entry_count,
+                        if entry_count == 1 { "entry" } else { "entries" }
+                    );
+                    println!();
+
+                    for entry in day_entries {
+                        let local_time = entry.created_at.with_timezone(&Local);
+
+                        println!(
+                            "  {} {}  {}",
+                            entry.status.to_ascii(),
+                            local_time.format("%H:%M"),
+                            entry.message
+                        );
+
+                        println!("      id: {}", entry.id);
+                        println!();
+                    }
+                }
+
+                Ok(())
+            }
+            Err(e) => Err(io::Error::other(e)),
+        },
+        Command::SetStatus { id, status } => match store.set_status(&id, &status) {
+            Ok(success) => {
+                if success {
+                    println!("Set status of item {} to be {}", id, status);
+                } else {
+                    println!("Item {} is already {}", id, status);
+                }
+
                 Ok(())
             }
             Err(e) => Err(io::Error::other(e)),

@@ -1,5 +1,7 @@
 use clap::{Parser, Subcommand};
 
+use crate::data::status::DevLogEntryStatus;
+
 #[derive(Debug, Parser)]
 #[command(
     name = "devlog",
@@ -22,6 +24,16 @@ pub enum Command {
 
     /// List journal entries.
     List,
+
+    /// Set status of entry
+    SetStatus {
+        /// Id of entry to set status
+        id: String,
+
+        /// Status to be set
+        #[arg(value_enum)]
+        status: DevLogEntryStatus,
+    },
 }
 
 fn version_text() -> &'static str {
