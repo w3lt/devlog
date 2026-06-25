@@ -14,7 +14,9 @@ pub struct Store {
     connection: Connection,
 }
 
-const LATEST_SCHEMA_VERSION: u32 = 2;
+const LATEST_SCHEMA_VERSION: u32 = 3;
+const ENTRY_TABLE_NAME: &str = "devlog_entries";
+const LOCAL_PROJECT_TABLE_NAME: &str = "devlog_local_projects";
 
 impl Store {
     pub fn open() -> io::Result<Self> {
@@ -37,8 +39,9 @@ impl Store {
 
         if version < 1 {
             tx.execute_batch(
-                "
-                    CREATE TABLE IF NOT EXISTS devlog_entries (
+                format!(
+                    "
+                    CREATE TABLE IF NOT EXISTS {} (
                         id          TEXT PRIMARY KEY NOT NULL,
                         created_at  TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
                         message     TEXT NOT NULL CHECK (length(trim(message)) > 0)
@@ -46,6 +49,9 @@ impl Store {
 
                     PRAGMA user_version = 1;
                 ",
+                    ENTRY_TABLE_NAME
+                )
+                .as_str(),
             )?;
 
             version = 1;
@@ -53,16 +59,61 @@ impl Store {
 
         if version < 2 {
             tx.execute_batch(
-                "
-                    ALTER TABLE devlog_entries
+                format!(
+                    "
+                    ALTER TABLE {}
                     ADD COLUMN status TEXT NOT NULL DEFAULT 'in_progress'
                     CHECK (status IN ('in_progress', 'done', 'cancelled'));
 
                     PRAGMA user_version = 2;
                 ",
+                    ENTRY_TABLE_NAME
+                )
+                .as_str(),
             )?;
 
             version = 2;
+        }
+
+        if version < 3 {
+            tx.execute_batch(
+                format!(
+                    "
+                    CREATE TABLE IF NOT EXISTS {} (
+                        id           TEXT PRIMARY KEY NOT NULL,
+                        name         TEXT NOT NULL,
+                        created_at   TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
+                        last_updated TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL)
+                    );
+
+                    ALTER TABLE {}
+                    ADD COLUMN project_id TEXT REFERENCES {}(id) ON DELETE SET NULL;
+
+                    ALTER TABLE {}
+                    ADD COLUMN last_updated TEXT CHECK (
+                        last_updated IS NULL OR datetime(last_updated) IS NOT NULL
+                    );
+
+                    UPDATE {}
+                    SET last_updated = created_at
+                    WHERE last_updated IS NULL;
+
+                    ALTER TABLE {}
+                    ALTER last_updated SET NOT NULL;
+
+                    PRAGMA user_version = 3;
+                ",
+                    LOCAL_PROJECT_TABLE_NAME,
+                    ENTRY_TABLE_NAME,
+                    LOCAL_PROJECT_TABLE_NAME,
+                    ENTRY_TABLE_NAME,
+                    ENTRY_TABLE_NAME,
+                    ENTRY_TABLE_NAME
+                )
+                .as_str(),
+            )?;
+
+            version = 3;
         }
 
         debug_assert_eq!(version, LATEST_SCHEMA_VERSION);
@@ -74,16 +125,22 @@ impl Store {
 
     pub fn insert_devlog_entry(&self, entry: DevLogEntry) -> rusqlite::Result<()> {
         self.connection.execute(
-            "
-                INSERT INTO devlog_entries VALUES (
-                    ?1, ?2, ?3, ?4
+            format!(
+                "
+                INSERT INTO {} (id, created_at, message, status, last_updated, project_id) VALUES (
+                    ?1, ?2, ?3, ?4, ?5, ?6
                 )
             ",
+                ENTRY_TABLE_NAME
+            )
+            .as_str(),
             (
                 entry.id,
                 entry.created_at.to_rfc3339(),
                 entry.message,
                 entry.status.to_db_value(),
+                entry.last_updated.to_rfc3339(),
+                entry.project_id,
             ),
         )?;
 
@@ -92,10 +149,14 @@ impl Store {
 
     pub fn get_entries(&self) -> rusqlite::Result<Vec<DevLogEntry>> {
         let mut stmt = self.connection.prepare(
-            "
-                SELECT * FROM devlog_entries
+            format!(
+                "
+                SELECT * FROM {}
                 ORDER BY created_at ASC
             ",
+                ENTRY_TABLE_NAME
+            )
+            .as_str(),
         )?;
 
         let entries = stmt.query_map([], |row| {
@@ -103,8 +164,20 @@ impl Store {
             let created_at_text: String = row.get("created_at")?;
             let message: String = row.get("message")?;
             let status_text: String = row.get("status")?;
+            let last_updated_text: String = row.get("last_updated")?;
+            let project_id: Option<String> = row.get("project_id")?;
 
             let created_at = DateTime::parse_from_rfc3339(&created_at_text)
+                .map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        1,
+                        rusqlite::types::Type::Text,
+                        Box::new(e),
+                    )
+                })?
+                .with_timezone(&Utc);
+
+            let last_updated = DateTime::parse_from_rfc3339(&last_updated_text)
                 .map_err(|e| {
                     rusqlite::Error::FromSqlConversionFailure(
                         1,
@@ -130,6 +203,8 @@ impl Store {
                 created_at,
                 message,
                 status,
+                last_updated,
+                project_id,
             })
         })?;
 
@@ -144,11 +219,15 @@ impl Store {
         let current_status: Option<String> = self
             .connection
             .query_row(
-                "
-                SELECT status
-                FROM devlog_entries
-                WHERE id = ?1
-            ",
+                format!(
+                    "
+                    SELECT status
+                    FROM {}
+                    WHERE id = ?1
+                ",
+                    ENTRY_TABLE_NAME
+                )
+                .as_str(),
                 [id],
                 |row| row.get("status"),
             )
@@ -164,14 +243,21 @@ impl Store {
             return Ok(SetStatusResult::NoChange);
         }
 
+        let current_time_str = Utc::now().to_rfc3339();
+
         self.connection.execute(
-            "
-                UPDATE devlog_entries
-                SET status = ?1
-                WHERE id = ?2
+            format!(
+                "
+                UPDATE {}
+                SET status = ?1,
+                SET last_updated = ?2,
+                WHERE id = ?3
                     AND status <> ?1
             ",
-            (status.to_db_value(), id),
+                ENTRY_TABLE_NAME
+            )
+            .as_str(),
+            (status.to_db_value(), current_time_str, id),
         )?;
 
         Ok(SetStatusResult::Updated)

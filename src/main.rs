@@ -15,7 +15,7 @@ fn main() -> io::Result<()> {
     let store = Store::open()?;
 
     match cli.command {
-        Command::Add { message } => commands::add::add_entry(&store, &message),
+        Command::Add { message } => commands::add::add_entry(&store, &message, None),
         Command::List => commands::list::list_entries(&store),
         Command::SetStatus { id, status } => commands::set_status::set_status(&store, &id, status),
     }
