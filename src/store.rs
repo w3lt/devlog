@@ -21,15 +21,15 @@ const LOCAL_PROJECT_TABLE_NAME: &str = "devlog_local_projects";
 impl Store {
     pub fn open() -> io::Result<Self> {
         let path = devlog_db_path()?;
-        let opt_c = Connection::open(path);
-        match opt_c {
-            Ok(c) => {
-                let mut s = Self { connection: c };
-                s.prepare().map_err(io::Error::other)?;
-                Ok(s)
-            }
-            Err(e) => Err(io::Error::other(e)),
-        }
+        let connection = Connection::open(path).map_err(io::Error::other)?;
+
+        connection
+            .pragma_update(None, "foreign_keys", true)
+            .map_err(io::Error::other)?;
+
+        let mut s = Self { connection };
+        s.prepare().map_err(io::Error::other)?;
+        Ok(s)
     }
 
     fn prepare(&mut self) -> rusqlite::Result<()> {
@@ -79,8 +79,6 @@ impl Store {
             tx.execute_batch(
                 format!(
                     "
-                    PRAGMA foreign_keys = ON;
-
                     CREATE TABLE IF NOT EXISTS {} (
                         id           TEXT PRIMARY KEY NOT NULL,
                         name         TEXT NOT NULL UNIQUE,
