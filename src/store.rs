@@ -81,13 +81,10 @@ impl Store {
                     "
                     CREATE TABLE IF NOT EXISTS {} (
                         id           TEXT PRIMARY KEY NOT NULL,
-                        name         TEXT NOT NULL UNIQUE,
+                        name         TEXT NOT NULL UNIQUE CHECK (length(trim(name)) > 0),
                         created_at   TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
                         last_updated TEXT NOT NULL CHECK (datetime(last_updated) IS NOT NULL)
                     );
-
-                    CREATE INDEX {}_name_index
-                    ON {} (name);
 
                     ALTER TABLE {}
                     ADD COLUMN project_name TEXT REFERENCES {}(name) ON DELETE SET NULL;
@@ -103,8 +100,6 @@ impl Store {
 
                     PRAGMA user_version = 3;
                 ",
-                    LOCAL_PROJECT_TABLE_NAME,
-                    LOCAL_PROJECT_TABLE_NAME,
                     LOCAL_PROJECT_TABLE_NAME,
                     ENTRY_TABLE_NAME,
                     LOCAL_PROJECT_TABLE_NAME,
@@ -174,7 +169,7 @@ impl Store {
         Ok(())
     }
 
-    pub fn get_entries(&self, project: Option<String>) -> rusqlite::Result<Vec<DevLogEntry>> {
+    pub fn get_entries(&self, project: Option<&str>) -> rusqlite::Result<Vec<DevLogEntry>> {
         match project {
             Some(real_project_name) => {
                 let mut stmt = self.connection.prepare(

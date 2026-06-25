@@ -5,7 +5,7 @@ use chrono::{Local, NaiveDate};
 use crate::{data::entry::DevLogEntry, store::Store};
 
 pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
-    match store.get_entries(project) {
+    match store.get_entries(project.as_deref()) {
         Ok(entries) => {
             let mut groups: Vec<(NaiveDate, Vec<DevLogEntry>)> = Vec::new();
 
@@ -37,10 +37,15 @@ pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
                     let local_time = entry.created_at.with_timezone(&Local);
 
                     println!(
-                        "  {} {}  {}",
+                        "  {} {}  {}{}",
                         entry.status.to_ascii(),
                         local_time.format("%H:%M"),
-                        entry.message
+                        entry.message,
+                        if let Some(real_project_name) = &entry.project_name {
+                            format!(" · {}", real_project_name)
+                        } else {
+                            String::new()
+                        }
                     );
 
                     println!("      id: {}", entry.id);
