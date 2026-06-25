@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. Entries are grouped by
 crate version and based on closed GitHub issues for `w3lt/devlog`.
 
+## [0.8.1] - 2026-06-25
+
+### Fixed
+
+- Fixed `-p`/`--project` accepting empty or whitespace-only values ([#11]);
+  `devlog add` and `devlog list` now reject blank projects with a clear error.
+
 ## [0.8.0] - 2026-06-25
 
 ### Added
@@ -31,3 +38,4 @@ crate version and based on closed GitHub issues for `w3lt/devlog`.
 [#1]: https://github.com/w3lt/devlog/issues/1
 [#2]: https://github.com/w3lt/devlog/issues/2
 [#7]: https://github.com/w3lt/devlog/issues/7
+[#11]: https://github.com/w3lt/devlog/issues/11
