@@ -152,19 +152,27 @@ impl Store {
         Ok(())
     }
 
-    pub fn get_entries(&self) -> rusqlite::Result<Vec<DevLogEntry>> {
-        let mut stmt = self.connection.prepare(
-            format!(
+    pub fn get_entries(&self, project: Option<String>) -> rusqlite::Result<Vec<DevLogEntry>> {
+        let sql = match project {
+            Some(_) => format!(
+                "
+                SELECT * FROM {}
+                WHERE project_id = ?1
+                ORDER BY created_at ASC
+            ",
+                ENTRY_TABLE_NAME
+            ),
+            None => format!(
                 "
                 SELECT * FROM {}
                 ORDER BY created_at ASC
             ",
                 ENTRY_TABLE_NAME
-            )
-            .as_str(),
-        )?;
+            ),
+        };
+        let mut stmt = self.connection.prepare(&sql)?;
 
-        let entries = stmt.query_map([], |row| {
+        let entries = stmt.query_map([project], |row| {
             let id: String = row.get("id")?;
             let created_at_text: String = row.get("created_at")?;
             let message: String = row.get("message")?;

@@ -28,7 +28,10 @@ pub enum Command {
     },
 
     /// List journal entries.
-    List,
+    List {
+        #[arg(short, long, value_name = "PROJECT")]
+        project: Option<String>,
+    },
 
     /// Set status of entry
     SetStatus {

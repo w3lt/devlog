@@ -4,8 +4,8 @@ use chrono::{Local, NaiveDate};
 
 use crate::{data::entry::DevLogEntry, store::Store};
 
-pub fn list_entries(store: &Store) -> io::Result<()> {
-    match store.get_entries() {
+pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
+    match store.get_entries(project) {
         Ok(entries) => {
             let mut groups: Vec<(NaiveDate, Vec<DevLogEntry>)> = Vec::new();
 

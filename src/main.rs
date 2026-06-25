@@ -16,7 +16,7 @@ fn main() -> io::Result<()> {
 
     match cli.command {
         Command::Add { message, project } => commands::add::add_entry(&store, &message, project),
-        Command::List => commands::list::list_entries(&store),
+        Command::List { project } => commands::list::list_entries(&store, project),
         Command::SetStatus { id, status } => commands::set_status::set_status(&store, &id, status),
     }
 }
