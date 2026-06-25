@@ -303,7 +303,7 @@ impl Store {
                 "
                 UPDATE {}
                 SET status = ?1,
-                SET last_updated = ?2
+                    last_updated = ?2
                 WHERE id = ?3
                     AND status <> ?1
             ",
