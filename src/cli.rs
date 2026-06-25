@@ -23,13 +23,13 @@ pub enum Command {
         /// The note you want to remember.
         message: String,
 
-        #[arg(short, long, value_name = "PROJECT")]
+        #[arg(short, long, value_name = "PROJECT", value_parser = parse_project_value)]
         project: Option<String>,
     },
 
     /// List journal entries.
     List {
-        #[arg(short, long, value_name = "PROJECT")]
+        #[arg(short, long, value_name = "PROJECT", value_parser = parse_project_value)]
         project: Option<String>,
     },
 
@@ -55,4 +55,14 @@ fn version_text() -> &'static str {
         "Repository: ",
         env!("CARGO_PKG_REPOSITORY")
     )
+}
+
+fn parse_project_value(value: &str) -> Result<String, String> {
+    let value = value.trim();
+
+    if value.is_empty() {
+        Err("project cannot be empty".to_string())
+    } else {
+        Ok(value.to_string())
+    }
 }
