@@ -1,20 +1,9 @@
 /target
 **/.DS_Store
 
-# docs build output
-docs/dist/
-
-# docs generated types
-docs/.astro/
-
-# docs dependencies
-docs/node_modules/
-
-# docs logs
-docs/npm-debug.log*
-docs/yarn-debug.log*
-docs/yarn-error.log*
-docs/pnpm-debug.log*
+docs/node_modules
+docs/dist
+docs/.astro
 
 .env
 .env.production
