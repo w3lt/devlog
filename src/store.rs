@@ -95,16 +95,13 @@ impl Store {
                     ADD COLUMN project_name TEXT REFERENCES {}(name) ON DELETE SET NULL;
 
                     ALTER TABLE {}
-                    ADD COLUMN last_updated TEXT CHECK (
-                        last_updated IS NULL OR datetime(last_updated) IS NOT NULL
-                    );
+                    ADD COLUMN last_updated TEXT NOT NULL 
+                    DEFAULT '1970-01-01T00:00:00Z'
+                    CHECK (datetime(last_updated) IS NOT NULL);
 
                     UPDATE {}
                     SET last_updated = created_at
-                    WHERE last_updated IS NULL;
-
-                    ALTER TABLE {}
-                    ALTER last_updated SET NOT NULL;
+                    WHERE last_updated = '1970-01-01T00:00:00Z';
 
                     PRAGMA user_version = 3;
                 ",
@@ -113,7 +110,6 @@ impl Store {
                     LOCAL_PROJECT_TABLE_NAME,
                     ENTRY_TABLE_NAME,
                     LOCAL_PROJECT_TABLE_NAME,
-                    ENTRY_TABLE_NAME,
                     ENTRY_TABLE_NAME,
                     ENTRY_TABLE_NAME
                 )
