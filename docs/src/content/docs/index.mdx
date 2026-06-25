@@ -1,40 +1,32 @@
 ---
-title: Welcome to Starlight
-description: Get started building your docs site with Starlight.
-template: splash # Remove or comment out this line to display the site sidebar on this page.
+title: devlog
+description: A tiny developer journal that lives in your terminal.
+template: splash
 hero:
-  tagline: Congrats on setting up a new Starlight project!
+  tagline: Capture what you did, when you did it — without ever leaving the shell.
   image:
-    file: ../../assets/houston.webp
+    file: ../../assets/hero.svg
+    alt: devlog — a tiny developer journal that lives in your terminal
   actions:
-    - text: Example Guide
-      link: /guides/example/
+    - text: Get started
+      link: /getting-started/installation/
       icon: right-arrow
-    - text: Read the Starlight docs
-      link: https://starlight.astro.build
+    - text: GitHub
+      link: https://github.com/w3lt/devlog
       icon: external
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+## Why devlog?
 
-## Next steps
+Standups, retros, performance reviews, and "wait, what did I actually ship last
+Tuesday?" all want the same thing: a timestamped trail of your work. `devlog`
+gives you that with two commands and zero ceremony. It is **local-first**, has
+**no network calls**, and keeps everything in a single SQLite file you own.
 
-<CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Edit `src/content/docs/index.mdx` to see this page change.
-	</Card>
-	<Card title="Change page layout" icon="document">
-		Delete `template: splash` in `src/content/docs/index.mdx` to display a
-		sidebar on this page.
-	</Card>
-	<Card title="Add new content" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs` to create new pages.
-	</Card>
-	<Card title="Configure your site" icon="setting">
-		Edit your `sidebar` and other config in `astro.config.mjs`.
-	</Card>
-	<Card title="Read the docs" icon="open-book">
-		Learn more in [the Starlight Docs](https://starlight.astro.build/).
-	</Card>
-</CardGrid>
+```console
+$ devlog add "Refactored the store layer"
+Added item "Refactored the store layer"!
+```
+
+That is the whole ritual. Type the note, hit enter, get back to work.
