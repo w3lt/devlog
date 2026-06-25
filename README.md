@@ -3,7 +3,7 @@
 <img src="assets/hero.svg" width="820" alt="devlog — a tiny developer journal that lives in your terminal" />
 
 <p>
-  <img src="https://img.shields.io/badge/version-0.7.0-3b82f6?style=flat-square" alt="version" />
+  <img src="https://img.shields.io/badge/version-0.8.0-3b82f6?style=flat-square" alt="version" />
   <img src="https://img.shields.io/badge/license-Apache--2.0-22c55e?style=flat-square" alt="license" />
   <img src="https://img.shields.io/badge/Rust-2024_edition-f59e0b?style=flat-square&logo=rust&logoColor=white" alt="Rust 2024 edition" />
   <img src="https://img.shields.io/badge/storage-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite storage" />
@@ -50,6 +50,7 @@ That is the whole ritual. Type the note, hit enter, get back to work.
 | 📓 **Frictionless capture** | One short command — `devlog add "…"` — and the thought is saved. |
 | 📜 **Full history at a glance** | `devlog list` groups every entry by day, most recent day first. |
 | ✅ **Track each entry's state** | Move items between `in_progress`, `done`, and `cancelled` with `devlog set-status`. |
+| 🏷️ **Group by project** | Tag an entry with `--project` and filter your history down to one project at a time. |
 | 🗃️ **Local-first SQLite** | Your journal lives in `~/.devlog/entries.sqlite`. No cloud, no account. |
 | 🆔 **Time-ordered UUID v7** | IDs encode creation time, so entries sort naturally by when they happened. |
 | 🕓 **Honest timestamps** | Stored in UTC (RFC 3339), shown in your local time when you `list`. |
@@ -99,8 +100,8 @@ Options:
 
 | Command | What it does | Example |
 |---|---|---|
-| `devlog add <message>` | Append a new entry, stamped with the current UTC time. | `devlog add "Cut the v0.2 release"` |
-| `devlog list` | Print every entry, grouped by day (newest day first). | `devlog list` |
+| `devlog add <message> [-p <project>]` | Append a new entry, stamped with the current UTC time. Optionally tag it with a project. | `devlog add "Cut the v0.2 release" -p devlog` |
+| `devlog list [-p <project>]` | Print every entry, grouped by day (newest day first). Pass `-p` to show one project only. | `devlog list -p devlog` |
 | `devlog set-status <id> <status>` | Set an entry's status to `in_progress`, `done`, or `cancelled`. | `devlog set-status <id> done` |
 | `devlog --version` | Show the installed version. | `devlog --version` |
 | `devlog --help` | Show help (works on subcommands too). | `devlog add --help` |
@@ -111,7 +112,7 @@ Options:
 $ devlog add "Ship the new auth flow"
 Added item "Ship the new auth flow"!
 
-$ devlog add "Fix flaky test in store.rs"
+$ devlog add "Fix flaky test in store.rs" --project devlog
 Added item "Fix flaky test in store.rs"!
 
 $ devlog list
@@ -120,26 +121,23 @@ Wednesday, 2026-06-24 · 2 entries
   [~] 09:14  Ship the new auth flow
       id: 019efa5e-5f23-70b3-b4d3-f5f1643764a3
 
-  [~] 11:02  Fix flaky test in store.rs
+  [~] 11:02  Fix flaky test in store.rs · devlog
       id: 019efa5e-5f2a-7eb0-9ed7-9980495715a5
 
 $ devlog set-status 019efa5e-5f23-70b3-b4d3-f5f1643764a3 done
 Set status of item 019efa5e-5f23-70b3-b4d3-f5f1643764a3 to be Done
 
-$ devlog list
-Wednesday, 2026-06-24 · 2 entries
+$ devlog list --project devlog
+Wednesday, 2026-06-24 · 1 entry
 
-  [✓] 09:14  Ship the new auth flow
-      id: 019efa5e-5f23-70b3-b4d3-f5f1643764a3
-
-  [~] 11:02  Fix flaky test in store.rs
+  [~] 11:02  Fix flaky test in store.rs · devlog
       id: 019efa5e-5f2a-7eb0-9ed7-9980495715a5
 ```
 
 Entries are grouped under a day header — `<weekday>, <YYYY-MM-DD> · <count>` —
 with the most recent day first. Within a day, each entry shows a status marker,
-its local `HH:MM` time, and the message, followed by the full UUID on an
-indented `id:` line:
+its local `HH:MM` time, the message, and — if the entry is tagged — a
+`· <project>` suffix, followed by the full UUID on an indented `id:` line:
 
 - `[~]` — in progress (the state every new entry starts in)
 - `[✓]` — done
@@ -147,6 +145,21 @@ indented `id:` line:
 
 Move an entry between states with `devlog set-status <id> <status>`, passing the
 full id from the `list` output and one of `in_progress`, `done`, or `cancelled`.
+If the entry is already in that state, `devlog` says so and changes nothing; an
+unknown id reports `Item <id> not found!`.
+
+### Projects
+
+Group related entries by tagging them with `-p`/`--project` when you add them:
+
+```console
+$ devlog add "Bump rusqlite to 0.40" --project devlog
+Added item "Bump rusqlite to 0.40"!
+```
+
+The project is created automatically the first time you mention it. Narrow your
+history to a single project with `devlog list --project devlog`; a plain
+`devlog list` still shows everything, tagged or not.
 
 ## How your data is stored
 
@@ -156,17 +169,29 @@ Everything lives in one SQLite database, created on first run:
 ~/.devlog/entries.sqlite
 ```
 
-The schema is a single table:
+The schema is two tables — entries, and the projects they can be tagged with:
 
 ```sql
 CREATE TABLE IF NOT EXISTS devlog_entries (
-    id          TEXT PRIMARY KEY NOT NULL,
-    created_at  TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
-    message     TEXT NOT NULL CHECK (length(trim(message)) > 0),
-    status      TEXT NOT NULL DEFAULT 'in_progress'
-                CHECK (status IN ('in_progress', 'done', 'cancelled'))
+    id            TEXT PRIMARY KEY NOT NULL,
+    created_at    TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
+    message       TEXT NOT NULL CHECK (length(trim(message)) > 0),
+    status        TEXT NOT NULL DEFAULT 'in_progress'
+                  CHECK (status IN ('in_progress', 'done', 'cancelled')),
+    last_updated  TEXT NOT NULL DEFAULT '1970-01-01T00:00:00Z'
+                  CHECK (datetime(last_updated) IS NOT NULL),
+    project_name  TEXT REFERENCES devlog_local_projects(name) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS devlog_local_projects (
+    id            TEXT PRIMARY KEY NOT NULL,
+    name          TEXT NOT NULL UNIQUE CHECK (length(trim(name)) > 0),
+    created_at    TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
+    last_updated  TEXT NOT NULL CHECK (datetime(last_updated) IS NOT NULL)
 );
 ```
+
+`devlog_entries`:
 
 | Column | Type | Notes |
 |---|---|---|
@@ -174,31 +199,46 @@ CREATE TABLE IF NOT EXISTS devlog_entries (
 | `created_at` | `TEXT` | UTC timestamp in RFC 3339; the `CHECK` rejects anything SQLite can't parse as a datetime. |
 | `message` | `TEXT` | The note. Must be non-empty after trimming whitespace. |
 | `status` | `TEXT` | Lifecycle state — one of `in_progress` (the default for new entries), `done`, or `cancelled`. |
+| `last_updated` | `TEXT` | UTC timestamp of the last status change; equals `created_at` for fresh entries. The `1970` default exists only to backfill rows created before this column. |
+| `project_name` | `TEXT` | Optional project tag — a foreign key into `devlog_local_projects(name)`, or `NULL` for untagged entries. |
 
-The schema is versioned (via SQLite's `PRAGMA user_version`), so existing
-journals are migrated in place when you upgrade `devlog` — the `status` column
-was added this way.
+`devlog_local_projects` holds one row per project, created on demand the first
+time you tag an entry with `--project`.
+
+The schema is versioned (via SQLite's `PRAGMA user_version`, currently `3`), so
+existing journals are migrated in place when you upgrade `devlog` — the `status`
+column was added this way, and later the projects table, `project_name`, and
+`last_updated`.
 
 Because it is plain SQLite, you can always inspect or back up your journal with
 ordinary tools:
 
 ```bash
-sqlite3 ~/.devlog/entries.sqlite "SELECT created_at, status, message FROM devlog_entries;"
+sqlite3 ~/.devlog/entries.sqlite "SELECT created_at, status, project_name, message FROM devlog_entries;"
 ```
 
 ## Project layout
 
 ```
 devlog/
-├── Cargo.toml          # crate: d3vlog · binary: devlog
+├── Cargo.toml              # crate: d3vlog · binary: devlog
 └── src/
-    ├── main.rs         # entry point — parse args, dispatch commands
-    ├── cli.rs          # clap definitions for `add`, `list`, and `set-status`
-    ├── store.rs        # SQLite connection, schema migrations, reads & writes
-    ├── data.rs         # data module root
+    ├── main.rs             # entry point — open the store, dispatch commands
+    ├── cli.rs              # clap definitions for `add`, `list`, and `set-status`
+    ├── cli/
+    │   ├── commands.rs     # commands module root
+    │   └── commands/
+    │       ├── add.rs      # `add`        — insert a new entry
+    │       ├── list.rs     # `list`       — group by day and print
+    │       └── set_status.rs # `set-status` — update an entry's status
+    ├── store.rs            # SQLite connection, schema migrations, reads & writes
+    ├── store/
+    │   └── result.rs       # outcome enum for a status update
+    ├── data.rs             # data module root
     └── data/
-        ├── entry.rs    # DevLogEntry model + display formatting
-        └── status.rs   # DevLogEntryStatus enum + parsing & rendering
+        ├── entry.rs        # DevLogEntry model + display formatting
+        ├── project.rs      # LocalProject model
+        └── status.rs       # DevLogEntryStatus enum + parsing & rendering
 ```
 
 The dependencies are intentionally few:
@@ -226,7 +266,7 @@ Ideas under consideration — **not yet implemented**:
 - [ ] `devlog search <term>` — filter entries by text
 - [ ] `devlog rm` / `devlog edit` — remove or amend entries
 - [ ] Date filters (`--since`, `--today`, `--week`)
-- [ ] Tags / projects per entry
+- [ ] Tags per entry
 - [ ] Export to Markdown or JSON
 - [ ] A scrollable TUI view
 

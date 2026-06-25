@@ -22,10 +22,16 @@ pub enum Command {
     Add {
         /// The note you want to remember.
         message: String,
+
+        #[arg(short, long, value_name = "PROJECT")]
+        project: Option<String>,
     },
 
     /// List journal entries.
-    List,
+    List {
+        #[arg(short, long, value_name = "PROJECT")]
+        project: Option<String>,
+    },
 
     /// Set status of entry
     SetStatus {
