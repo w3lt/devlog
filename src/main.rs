@@ -12,10 +12,12 @@ mod store;
 
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
-    let store = Store::open()?;
+    let mut store = Store::open()?;
 
     match cli.command {
-        Command::Add { message, project } => commands::add::add_entry(&store, &message, project),
+        Command::Add { message, project } => {
+            commands::add::add_entry(&mut store, &message, project)
+        }
         Command::List { project } => commands::list::list_entries(&store, project),
         Command::SetStatus { id, status } => commands::set_status::set_status(&store, &id, status),
     }

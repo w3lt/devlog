@@ -1,7 +1,7 @@
 use std::{env, io, path::PathBuf};
 
 use chrono::{DateTime, Utc};
-use rusqlite::{Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, Row};
 
 use crate::{
     data::{entry::DevLogEntry, project::LocalProject, status::DevLogEntryStatus},
@@ -79,11 +79,13 @@ impl Store {
             tx.execute_batch(
                 format!(
                     "
+                    PRAGMA foreign_keys = ON;
+
                     CREATE TABLE IF NOT EXISTS {} (
                         id           TEXT PRIMARY KEY NOT NULL,
                         name         TEXT NOT NULL UNIQUE,
                         created_at   TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL),
-                        last_updated TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL)
+                        last_updated TEXT NOT NULL CHECK (datetime(last_updated) IS NOT NULL)
                     );
 
                     CREATE INDEX {}_name_index
@@ -128,8 +130,32 @@ impl Store {
         Ok(())
     }
 
-    pub fn insert_devlog_entry(&self, entry: DevLogEntry) -> rusqlite::Result<()> {
-        self.connection.execute(
+    pub fn insert_devlog_entry(&mut self, entry: DevLogEntry) -> rusqlite::Result<()> {
+        let tx = self.connection.transaction()?;
+
+        if let Some(project_name) = &entry.project_name {
+            let project = LocalProject::new(&project_name);
+
+            tx.execute(
+                format!(
+                    "
+                INSERT INTO {} (id, name, created_at, last_updated)
+                VALUES (?1, ?2, ?3, ?4)
+                ON CONFLICT(name) DO NOTHING;
+            ",
+                    LOCAL_PROJECT_TABLE_NAME
+                )
+                .as_str(),
+                (
+                    project.id,
+                    project.name,
+                    project.created_at.to_rfc3339(),
+                    project.last_updated.to_rfc3339(),
+                ),
+            )?;
+        }
+
+        tx.execute(
             format!(
                 "
                 INSERT INTO {} (id, created_at, message, status, last_updated, project_name) VALUES (
@@ -149,79 +175,93 @@ impl Store {
             ),
         )?;
 
+        tx.commit()?;
+
         Ok(())
     }
 
     pub fn get_entries(&self, project: Option<String>) -> rusqlite::Result<Vec<DevLogEntry>> {
-        let sql = match project {
-            Some(_) => format!(
-                "
-                SELECT * FROM {}
-                WHERE project_id = ?1
-                ORDER BY created_at ASC
-            ",
-                ENTRY_TABLE_NAME
-            ),
-            None => format!(
-                "
-                SELECT * FROM {}
-                ORDER BY created_at ASC
-            ",
-                ENTRY_TABLE_NAME
-            ),
-        };
-        let mut stmt = self.connection.prepare(&sql)?;
-
-        let entries = stmt.query_map([project], |row| {
-            let id: String = row.get("id")?;
-            let created_at_text: String = row.get("created_at")?;
-            let message: String = row.get("message")?;
-            let status_text: String = row.get("status")?;
-            let last_updated_text: String = row.get("last_updated")?;
-            let project_name: Option<String> = row.get("project_name")?;
-
-            let created_at = DateTime::parse_from_rfc3339(&created_at_text)
-                .map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
-                        1,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
+        match project {
+            Some(real_project_name) => {
+                let mut stmt = self.connection.prepare(
+                    format!(
+                        "
+                            SELECT * FROM {}
+                            WHERE project_name = ?1
+                            ORDER BY created_at ASC
+                        ",
+                        ENTRY_TABLE_NAME
                     )
-                })?
-                .with_timezone(&Utc);
+                    .as_str(),
+                )?;
 
-            let last_updated = DateTime::parse_from_rfc3339(&last_updated_text)
-                .map_err(|e| {
-                    rusqlite::Error::FromSqlConversionFailure(
-                        1,
-                        rusqlite::types::Type::Text,
-                        Box::new(e),
+                stmt.query_map([real_project_name], Self::entry_from_row)?
+                    .collect()
+            }
+            None => {
+                let mut stmt = self.connection.prepare(
+                    format!(
+                        "
+                            SELECT * FROM {}
+                            ORDER BY created_at ASC
+                        ",
+                        ENTRY_TABLE_NAME
                     )
-                })?
-                .with_timezone(&Utc);
+                    .as_str(),
+                )?;
 
-            let status = DevLogEntryStatus::from_db_value(&status_text).ok_or_else(|| {
+                stmt.query_map([], Self::entry_from_row)?.collect()
+            }
+        }
+    }
+
+    fn entry_from_row(row: &Row<'_>) -> rusqlite::Result<DevLogEntry> {
+        let id: String = row.get("id")?;
+        let created_at_text: String = row.get("created_at")?;
+        let message: String = row.get("message")?;
+        let status_text: String = row.get("status")?;
+        let last_updated_text: String = row.get("last_updated")?;
+        let project_name: Option<String> = row.get("project_name")?;
+
+        let created_at = DateTime::parse_from_rfc3339(&created_at_text)
+            .map_err(|e| {
                 rusqlite::Error::FromSqlConversionFailure(
-                    3,
+                    1,
                     rusqlite::types::Type::Text,
-                    Box::new(std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        format!("invalid devlog entry status: {status_text}"),
-                    )),
+                    Box::new(e),
                 )
-            })?;
+            })?
+            .with_timezone(&Utc);
 
-            Ok(DevLogEntry {
-                id,
-                created_at,
-                message,
-                status,
-                last_updated,
-                project_name,
-            })
+        let last_updated = DateTime::parse_from_rfc3339(&last_updated_text)
+            .map_err(|e| {
+                rusqlite::Error::FromSqlConversionFailure(
+                    1,
+                    rusqlite::types::Type::Text,
+                    Box::new(e),
+                )
+            })?
+            .with_timezone(&Utc);
+
+        let status = DevLogEntryStatus::from_db_value(&status_text).ok_or_else(|| {
+            rusqlite::Error::FromSqlConversionFailure(
+                3,
+                rusqlite::types::Type::Text,
+                Box::new(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("invalid devlog entry status: {status_text}"),
+                )),
+            )
         })?;
 
-        entries.collect()
+        Ok(DevLogEntry {
+            id,
+            created_at,
+            message,
+            status,
+            last_updated,
+            project_name,
+        })
     }
 
     pub fn set_status(
@@ -263,7 +303,7 @@ impl Store {
                 "
                 UPDATE {}
                 SET status = ?1,
-                SET last_updated = ?2,
+                SET last_updated = ?2
                 WHERE id = ?3
                     AND status <> ?1
             ",

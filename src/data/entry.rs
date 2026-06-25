@@ -17,12 +17,13 @@ pub struct DevLogEntry {
 
 impl DevLogEntry {
     pub fn new(message: &str, project_name: Option<String>) -> Self {
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7().to_string(),
-            created_at: Utc::now(),
+            created_at: now,
             message: String::from(message),
             status: DevLogEntryStatus::InProgress,
-            last_updated: Utc::now(),
+            last_updated: now,
             project_name,
         }
     }

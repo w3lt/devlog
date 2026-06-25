@@ -11,11 +11,12 @@ pub struct LocalProject {
 
 impl LocalProject {
     pub fn new(name: &str) -> Self {
+        let now = Utc::now();
         Self {
             id: Uuid::now_v7().to_string(),
             name: String::from(name),
-            created_at: Utc::now(),
-            last_updated: Utc::now(),
+            created_at: now,
+            last_updated: now,
         }
     }
 }
