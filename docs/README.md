@@ -1,49 +1,56 @@
-# Starlight Starter Kit: Basics
+# devlog documentation site
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+This is the Astro Starlight documentation site for
+[`devlog`](https://github.com/w3lt/devlog), the Rust CLI published as the
+`d3vlog` crate.
 
-```
-pnpm create astro@latest -- --template starlight
-```
+The docs project is intentionally self-contained under `docs/`. The repository
+root `README.md` remains the GitHub and crates.io front page.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Local development
 
-## 🚀 Project Structure
+Run commands from this `docs/` directory:
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
-
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
+```bash
+pnpm install
+pnpm dev
+pnpm check
+pnpm build
+pnpm preview
 ```
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+With `base: '/devlog'`, local dev and preview serve the site under
+`/devlog`, for example:
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+```text
+http://localhost:4321/devlog
+```
 
-Static assets, like favicons, can be placed in the `public/` directory.
+## Deployment
 
-## 🧞 Commands
+The site deploys to GitHub Pages with `.github/workflows/docs.yml`.
 
-All commands are run from the root of the project, from a terminal:
+The workflow builds this directory with `withastro/action@v3`, uploads the
+Pages artifact, and deploys it with `actions/deploy-pages@v4`.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+Before the first deploy, enable Pages in the GitHub repository:
 
-## 👀 Want to learn more?
+```text
+Settings -> Pages -> Source -> GitHub Actions
+```
 
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+The deployed site is expected at:
+
+```text
+https://w3lt.github.io/devlog
+```
+
+## Validation
+
+From the repository root, run:
+
+```bash
+pnpm --dir docs check
+pnpm --dir docs build
+cargo build
+```
