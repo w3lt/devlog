@@ -134,7 +134,7 @@ impl Store {
         let tx = self.connection.transaction()?;
 
         if let Some(project_name) = &entry.project_name {
-            let project = LocalProject::new(&project_name);
+            let project = LocalProject::new(project_name);
 
             tx.execute(
                 format!(
@@ -314,30 +314,6 @@ impl Store {
         )?;
 
         Ok(SetStatusResult::Updated)
-    }
-
-    pub fn create_project_if_nonexist(&self, project_name: &str) -> rusqlite::Result<()> {
-        let project = LocalProject::new(project_name);
-
-        self.connection.execute(
-            format!(
-                "
-                INSERT INTO {} (id, name, created_at, last_updated)
-                VALUES (?1, ?2, ?3, ?4)
-                ON CONFLICT(name) DO NOTHING;
-            ",
-                LOCAL_PROJECT_TABLE_NAME
-            )
-            .as_str(),
-            (
-                project.id,
-                project.name,
-                project.created_at.to_rfc3339(),
-                project.last_updated.to_rfc3339(),
-            ),
-        )?;
-
-        Ok(())
     }
 }
 
