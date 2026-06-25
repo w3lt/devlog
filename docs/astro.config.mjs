@@ -4,22 +4,41 @@ import starlight from '@astrojs/starlight';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://w3lt.github.io',
+	base: '/devlog',
 	integrations: [
 		starlight({
-			title: 'My Docs',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+			title: 'devlog',
+			social: [
+				{
+					icon: 'github',
+					label: 'GitHub',
+					href: 'https://github.com/w3lt/devlog',
+				},
+			],
 			sidebar: [
+				{
+					label: 'Getting started',
+					items: [
+						{ slug: 'getting-started/introduction' },
+						{ slug: 'getting-started/installation' },
+					],
+				},
 				{
 					label: 'Guides',
 					items: [
-						// Each item here is one entry in the navigation menu.
-						{ label: 'Example Guide', slug: 'guides/example' },
+						{ slug: 'guides/usage' },
+						{ slug: 'guides/projects' },
 					],
 				},
 				{
 					label: 'Reference',
-					items: [{ autogenerate: { directory: 'reference' } }],
+					items: [
+						{ slug: 'reference/data-storage' },
+						{ slug: 'reference/project-layout' },
+					],
 				},
+				{ label: 'Contributing', slug: 'contributing' },
 			],
 		}),
 	],
