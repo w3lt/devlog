@@ -3,7 +3,7 @@
 <img src="assets/hero.svg" width="820" alt="devlog — a tiny developer journal that lives in your terminal" />
 
 <p>
-  <img src="https://img.shields.io/badge/version-0.8.0-3b82f6?style=flat-square" alt="version" />
+  <img src="https://img.shields.io/badge/version-0.8.1-3b82f6?style=flat-square" alt="version" />
   <img src="https://img.shields.io/badge/license-Apache--2.0-22c55e?style=flat-square" alt="license" />
   <img src="https://img.shields.io/badge/Rust-2024_edition-f59e0b?style=flat-square&logo=rust&logoColor=white" alt="Rust 2024 edition" />
   <img src="https://img.shields.io/badge/storage-SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite storage" />
@@ -157,9 +157,11 @@ $ devlog add "Bump rusqlite to 0.40" --project devlog
 Added item "Bump rusqlite to 0.40"!
 ```
 
-The project is created automatically the first time you mention it. Narrow your
-history to a single project with `devlog list --project devlog`; a plain
-`devlog list` still shows everything, tagged or not.
+The project is created automatically the first time you mention it. Names are
+trimmed of surrounding whitespace, and a blank `--project` is rejected with
+`project cannot be empty`. Narrow your history to a single project with
+`devlog list --project devlog`; a plain `devlog list` still shows everything,
+tagged or not.
 
 ## How your data is stored
 
