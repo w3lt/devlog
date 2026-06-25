@@ -36,17 +36,18 @@ pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
                 for entry in day_entries {
                     let local_time = entry.created_at.with_timezone(&Local);
 
-                    println!(
-                        "  {} {}  {}{}",
+                    print!(
+                        "  {} {}  {}",
                         entry.status.to_ascii(),
                         local_time.format("%H:%M"),
                         entry.message,
-                        if let Some(real_project_name) = &entry.project_name {
-                            format!(" · {}", real_project_name)
-                        } else {
-                            String::new()
-                        }
                     );
+
+                    if let Some(project_name) = &entry.project_name {
+                        print!(" · {}", project_name);
+                    }
+
+                    println!();
 
                     println!("      id: {}", entry.id);
                     println!();
