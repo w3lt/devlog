@@ -86,8 +86,11 @@ impl Store {
                         last_updated TEXT NOT NULL CHECK (datetime(created_at) IS NOT NULL)
                     );
 
+                    CREATE INDEX {}_name_index
+                    ON {} (name);
+
                     ALTER TABLE {}
-                    ADD COLUMN project_id TEXT REFERENCES {}(id) ON DELETE SET NULL;
+                    ADD COLUMN project_name TEXT REFERENCES {}(name) ON DELETE SET NULL;
 
                     ALTER TABLE {}
                     ADD COLUMN last_updated TEXT CHECK (
@@ -103,6 +106,8 @@ impl Store {
 
                     PRAGMA user_version = 3;
                 ",
+                    LOCAL_PROJECT_TABLE_NAME,
+                    LOCAL_PROJECT_TABLE_NAME,
                     LOCAL_PROJECT_TABLE_NAME,
                     ENTRY_TABLE_NAME,
                     LOCAL_PROJECT_TABLE_NAME,
@@ -127,7 +132,7 @@ impl Store {
         self.connection.execute(
             format!(
                 "
-                INSERT INTO {} (id, created_at, message, status, last_updated, project_id) VALUES (
+                INSERT INTO {} (id, created_at, message, status, last_updated, project_name) VALUES (
                     ?1, ?2, ?3, ?4, ?5, ?6
                 )
             ",
@@ -140,7 +145,7 @@ impl Store {
                 entry.message,
                 entry.status.to_db_value(),
                 entry.last_updated.to_rfc3339(),
-                entry.project_id,
+                entry.project_name,
             ),
         )?;
 
@@ -165,7 +170,7 @@ impl Store {
             let message: String = row.get("message")?;
             let status_text: String = row.get("status")?;
             let last_updated_text: String = row.get("last_updated")?;
-            let project_id: Option<String> = row.get("project_id")?;
+            let project_name: Option<String> = row.get("project_name")?;
 
             let created_at = DateTime::parse_from_rfc3339(&created_at_text)
                 .map_err(|e| {
@@ -204,7 +209,7 @@ impl Store {
                 message,
                 status,
                 last_updated,
-                project_id,
+                project_name,
             })
         })?;
 
