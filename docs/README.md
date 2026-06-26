@@ -93,8 +93,8 @@ The site deploys to GitHub Pages via
 [`.github/workflows/docs.yml`](../.github/workflows/docs.yml) on every push to
 `main` that touches `docs/**` (or manually via `workflow_dispatch`).
 
-The workflow builds this directory with `withastro/action@v3` — which also
-uploads the Pages artifact — and then deploys it with `actions/deploy-pages@v4`.
+The workflow builds this directory with `withastro/action@v6` — which also
+uploads the Pages artifact — and then deploys it with `actions/deploy-pages@v5`.
 
 Before the first deploy, enable Pages in the GitHub repository:
 
