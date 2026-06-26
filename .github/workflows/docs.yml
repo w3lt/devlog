@@ -1,6 +1,10 @@
 name: Docs
 
 on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
   push:
     branches: [main]
     paths:
@@ -29,11 +33,12 @@ jobs:
         uses: withastro/action@v3
         with:
           path: docs
-          node-version: 20
+          node-version: 24
 
   deploy:
     name: Deploy docs
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
