@@ -1,0 +1,32 @@
+---
+title: devlog
+description: A tiny developer journal that lives in your terminal.
+template: splash
+hero:
+  tagline: Capture what you did, when you did it — without ever leaving the shell.
+  image:
+    file: ../../assets/hero.svg
+    alt: devlog — a tiny developer journal that lives in your terminal
+  actions:
+    - text: Get started
+      link: /devlog/getting-started/installation/
+      icon: right-arrow
+    - text: GitHub
+      link: https://github.com/w3lt/devlog
+      icon: external
+      variant: minimal
+---
+
+## Why devlog?
+
+Standups, retros, performance reviews, and "wait, what did I actually ship last
+Tuesday?" all want the same thing: a timestamped trail of your work. `devlog`
+gives you that with two commands and zero ceremony. It is **local-first**, has
+**no network calls**, and keeps everything in a single SQLite file you own.
+
+```console
+$ devlog add "Refactored the store layer"
+Added item "Refactored the store layer"!
+```
+
+That is the whole ritual. Type the note, hit enter, get back to work.
