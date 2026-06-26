@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Astro-7.0-BC52EE?style=flat-square&logo=astro&logoColor=white" alt="Astro 7" />
   <img src="https://img.shields.io/badge/Starlight-0.41-9333ea?style=flat-square&logo=astro&logoColor=white" alt="Starlight 0.41" />
   <img src="https://img.shields.io/badge/pnpm-11.5-F69220?style=flat-square&logo=pnpm&logoColor=white" alt="pnpm 11.5" />
-  <img src="https://img.shields.io/badge/Node-20-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node 20" />
+  <img src="https://img.shields.io/badge/Node-24-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white" alt="Node 24" />
   <img src="https://img.shields.io/badge/deploy-GitHub_Pages-222?style=flat-square&logo=githubpages&logoColor=white" alt="GitHub Pages" />
 </p>
 
@@ -36,7 +36,7 @@ about building and shipping the docs. The repository root
 
 ## Local development
 
-**Requirements:** Node **20** and [pnpm](https://pnpm.io) — the repo pins
+**Requirements:** Node **24** and [pnpm](https://pnpm.io) — the repo pins
 `pnpm@11.5.2` via the `packageManager` field, so `corepack` will select it
 automatically.
 
