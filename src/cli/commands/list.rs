@@ -6,6 +6,7 @@ use chrono::{Local, NaiveDate};
 use crate::{
     data::{entry::DevLogEntry, status::DevLogEntryStatus},
     store::Store,
+    style,
 };
 
 const DATE_STYLE: Style = Style::new().bold();
@@ -66,7 +67,7 @@ fn print_day(
 
     for entry in day_entries {
         let local_time = entry.created_at.with_timezone(&Local);
-        let status_style = status_style(&entry.status);
+        let status_style = style::status_style(&entry.status);
         let message_style = message_style(&entry.status);
 
         write!(
@@ -93,14 +94,6 @@ fn print_day(
     }
 
     Ok(())
-}
-
-fn status_style(status: &DevLogEntryStatus) -> Style {
-    match status {
-        DevLogEntryStatus::InProgress => AnsiColor::Yellow.on_default().bold(),
-        DevLogEntryStatus::Done => AnsiColor::Green.on_default().bold(),
-        DevLogEntryStatus::Cancelled => AnsiColor::Red.on_default().bold(),
-    }
 }
 
 fn message_style(status: &DevLogEntryStatus) -> Style {
