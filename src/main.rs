@@ -9,10 +9,13 @@ use clap::Parser;
 mod cli;
 mod data;
 mod store;
+mod style;
 
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
     let mut store = Store::open()?;
+
+    cli.color.into_color_choice().write_global();
 
     match cli.command {
         Command::Add { message, project } => {

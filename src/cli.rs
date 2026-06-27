@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::data::status::DevLogEntryStatus;
+use crate::{data::status::DevLogEntryStatus, style::ColorChoice};
 
 pub mod commands;
 
@@ -12,6 +12,9 @@ pub mod commands;
     about = "A tiny developer journal for the terminal"
 )]
 pub struct Cli {
+    #[arg(long, value_enum, global = true, default_value_t = ColorChoice::Auto)]
+    pub color: ColorChoice,
+
     #[command(subcommand)]
     pub command: Command,
 }
