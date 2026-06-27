@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. Entries are grouped by
 crate version and based on closed GitHub issues for `w3lt/devlog`.
 
+## [0.9.0] - 2026-06-27
+
+### Added
+
+- Added colored, styled terminal output ([#14]): `devlog list`, `add`, and
+  `set-status` color status markers and labels (yellow `in_progress`, green
+  `done`, red `cancelled`), tint project tags and freshly added messages cyan,
+  dim timestamps and ids, and strike through cancelled messages.
+- Added a global `--color` flag (`auto`/`always`/`never`); color is detected
+  from the terminal by default and stripped when output is piped or redirected.
+
 ## [0.8.1] - 2026-06-25
 
 ### Fixed
@@ -39,3 +50,4 @@ crate version and based on closed GitHub issues for `w3lt/devlog`.
 [#2]: https://github.com/w3lt/devlog/issues/2
 [#7]: https://github.com/w3lt/devlog/issues/7
 [#11]: https://github.com/w3lt/devlog/issues/11
+[#14]: https://github.com/w3lt/devlog/issues/14

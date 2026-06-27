@@ -10,7 +10,8 @@ devlog/
 ├── Cargo.toml              # crate: d3vlog · binary: devlog
 └── src/
     ├── main.rs             # entry point: open the store, dispatch commands
-    ├── cli.rs              # clap definitions for add, list, and set-status
+    ├── cli.rs              # clap definitions plus the global --color flag
+    ├── style.rs            # --color choice and per-status color styles (anstyle)
     ├── cli/
     │   ├── commands.rs     # commands module root
     │   └── commands/
@@ -35,6 +36,8 @@ The dependencies are intentionally few:
 - [`rusqlite`](https://crates.io/crates/rusqlite) — SQLite access, bundled
 - [`chrono`](https://crates.io/crates/chrono) — UTC timestamps
 - [`uuid`](https://crates.io/crates/uuid) — UUID v7 identifiers
+- [`anstyle`](https://crates.io/crates/anstyle) — terminal text styling
+- [`anstream`](https://crates.io/crates/anstream) — color-aware stdout, auto-strips on non-TTY
 
 ## Building from source
 
