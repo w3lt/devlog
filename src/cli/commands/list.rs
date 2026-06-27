@@ -44,11 +44,7 @@ pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
     }
 }
 
-fn print_day(
-    out: &mut impl Write,
-    day: &NaiveDate,
-    day_entries: &Vec<DevLogEntry>,
-) -> io::Result<()> {
+fn print_day(out: &mut impl Write, day: &NaiveDate, day_entries: &[DevLogEntry]) -> io::Result<()> {
     let entry_count = day_entries.len();
     let entry_count_label = if entry_count == 1 { "entry" } else { "entries" };
 
