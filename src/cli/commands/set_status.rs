@@ -1,22 +1,38 @@
-use std::io;
-
 use crate::{
     data::status::DevLogEntryStatus,
     store::{Store, result::SetStatusResult},
+    style::{self, ID_STYLE},
 };
+use std::io::{self, Write};
 
 pub fn set_status(store: &Store, id: &str, status: DevLogEntryStatus) -> io::Result<()> {
+    let status_style = style::status_style(&status);
+    let mut out = anstream::stdout().lock();
+    let bold_id_style = ID_STYLE.bold();
+
     match store.set_status(id, &status) {
         Ok(result) => {
             match result {
                 SetStatusResult::Updated => {
-                    println!("Set status of item {} to be {}", id, status);
+                    writeln!(
+                        out,
+                        "Set status of item {bold_id_style}{}{bold_id_style:#} to be {status_style}{}{status_style:#}",
+                        id, status
+                    )?;
                 }
                 SetStatusResult::NoChange => {
-                    println!("Item {} is already {}", id, status);
+                    writeln!(
+                        out,
+                        "Item {bold_id_style}{}{bold_id_style:#} is already {status_style}{}{status_style:#}",
+                        id, status
+                    )?;
                 }
                 SetStatusResult::NotFound => {
-                    println!("Item {} not found!", id);
+                    writeln!(
+                        out,
+                        "Item {bold_id_style}{}{bold_id_style:#} not found!",
+                        id
+                    )?;
                 }
             }
             Ok(())

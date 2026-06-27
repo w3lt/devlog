@@ -1,11 +1,12 @@
 <svg width="860" height="552" viewBox="0 0 860 552" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="'SF Mono','Cascadia Code','JetBrains Mono','Fira Code',Menlo,Consolas,monospace">
   <defs>
+    <!-- Wordmark sheen — devlog's four output colors: cyan, green, yellow, red -->
     <linearGradient id="sheen" x1="250" y1="0" x2="610" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f59e0b"/>
-      <stop offset="0.30" stop-color="#ec4899"/>
-      <stop offset="0.55" stop-color="#8b5cf6"/>
-      <stop offset="0.80" stop-color="#22d3ee"/>
-      <stop offset="1" stop-color="#f59e0b"/>
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="0.30" stop-color="#3fb950"/>
+      <stop offset="0.55" stop-color="#e3b341"/>
+      <stop offset="0.80" stop-color="#f85149"/>
+      <stop offset="1" stop-color="#22d3ee"/>
       <animateTransform attributeName="gradientTransform" type="translate"
         values="-110 0; 110 0; -110 0" dur="9s" repeatCount="indefinite"
         calcMode="spline" keyTimes="0;0.5;1" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>
@@ -35,67 +36,67 @@
   <g font-size="15">
     <!-- line 1: add command -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.04;0.06;0.92;1" values="0;0;1;1;0"/>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.02;0.04;0.92;1" values="0;0;1;1;0"/>
       <text x="70" y="222" fill="#e6edf3"><tspan fill="#3fb950">$ </tspan><tspan fill="#79c0ff">devlog</tspan> add <tspan fill="#a5d6ff">"Ship the new auth flow"</tspan></text>
     </g>
-    <!-- line 2: response -->
+    <!-- line 2: response — message styled cyan, like the real output -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.10;0.12;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="248" fill="#7d8590">Added item <tspan fill="#a5d6ff">"Ship the new auth flow"</tspan>!</text>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.07;0.09;0.92;1" values="0;0;1;1;0"/>
+      <text x="70" y="248" fill="#7d8590">Added item <tspan fill="#22d3ee" font-weight="700">"Ship the new auth flow"</tspan>!</text>
     </g>
-    <!-- line 3: add command -->
+    <!-- line 3: list command -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.20;0.22;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="300" fill="#e6edf3"><tspan fill="#3fb950">$ </tspan><tspan fill="#79c0ff">devlog</tspan> add <tspan fill="#a5d6ff">"Fix flaky test in store.rs"</tspan> --project devlog</text>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.15;0.17;0.92;1" values="0;0;1;1;0"/>
+      <text x="70" y="298" fill="#e6edf3"><tspan fill="#3fb950">$ </tspan><tspan fill="#79c0ff">devlog</tspan> list</text>
     </g>
-    <!-- line 4: response -->
+    <!-- line 4: day header — date bold, count dimmed -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.26;0.28;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="326" fill="#7d8590">Added item <tspan fill="#a5d6ff">"Fix flaky test in store.rs"</tspan>!</text>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.21;0.23;0.92;1" values="0;0;1;1;0"/>
+      <text x="70" y="326"><tspan fill="#e6edf3" font-weight="700">Wednesday, 2026-06-24</tspan><tspan fill="#6e7681"> · 3 entries</tspan></text>
     </g>
-    <!-- line 5: list command -->
+    <!-- line 5: done entry — green marker -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.38;0.40;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="378" fill="#e6edf3"><tspan fill="#3fb950">$ </tspan><tspan fill="#79c0ff">devlog</tspan> list</text>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.29;0.31;0.92;1" values="0;0;1;1;0"/>
+      <text x="70" y="364"><tspan fill="#3fb950" font-weight="700">[✓]</tspan><tspan fill="#6e7681" font-style="italic"> 09:14</tspan><tspan fill="#e6edf3">  Ship the new auth flow</tspan></text>
     </g>
-    <!-- line 6: day header -->
+    <!-- line 6: id -->
+    <g opacity="0" font-size="13">
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.34;0.36;0.92;1" values="0;0;1;1;0"/>
+      <text x="92" y="384" fill="#6e7681">id: 019efa5e-5f23-70b3-b4d3-f5f1643764a3</text>
+    </g>
+    <!-- line 7: in-progress entry — yellow marker, cyan project -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.40;0.42;0.92;1" values="0;0;1;1;0"/>
+      <text x="70" y="414"><tspan fill="#e3b341" font-weight="700">[~]</tspan><tspan fill="#6e7681" font-style="italic"> 11:02</tspan><tspan fill="#e6edf3">  Fix flaky test in store.rs</tspan><tspan fill="#6e7681"> · </tspan><tspan fill="#22d3ee" font-weight="700">devlog</tspan></text>
+    </g>
+    <!-- line 8: id -->
+    <g opacity="0" font-size="13">
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
         keyTimes="0;0.45;0.47;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="404" fill="#7d8590">Wednesday, 2026-06-24 · 2 entries</text>
+      <text x="92" y="434" fill="#6e7681">id: 019efa5e-5f2a-7eb0-9ed7-9980495715a5</text>
     </g>
-    <!-- line 7: first entry -->
+    <!-- line 9: cancelled entry — red marker, struck message -->
     <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.52;0.54;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="430"><tspan fill="#7d8590">[~] 09:14  </tspan><tspan fill="#e6edf3">Ship the new auth flow</tspan></text>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.51;0.53;0.92;1" values="0;0;1;1;0"/>
+      <text x="70" y="464"><tspan fill="#f85149" font-weight="700">[x]</tspan><tspan fill="#6e7681" font-style="italic"> 13:20</tspan><tspan fill="#e6edf3" text-decoration="line-through">  Drop the legacy CSV export</tspan></text>
     </g>
-    <!-- line 8: first id -->
+    <!-- line 10: id -->
     <g opacity="0" font-size="13">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.58;0.60;0.92;1" values="0;0;1;1;0"/>
-      <text x="92" y="452"><tspan fill="#6e7681">id: </tspan><tspan fill="#bc8cff">019efa5e-5f23-70b3-b4d3-f5f1643764a3</tspan></text>
-    </g>
-    <!-- line 9: second entry -->
-    <g opacity="0">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.64;0.66;0.92;1" values="0;0;1;1;0"/>
-      <text x="70" y="476"><tspan fill="#7d8590">[~] 11:02  </tspan><tspan fill="#e6edf3">Fix flaky test in store.rs</tspan><tspan fill="#7d8590"> · devlog</tspan></text>
-    </g>
-    <!-- line 10: second id -->
-    <g opacity="0" font-size="13">
-      <animate attributeName="opacity" dur="13s" repeatCount="indefinite"
-        keyTimes="0;0.70;0.72;0.92;1" values="0;0;1;1;0"/>
-      <text x="92" y="494"><tspan fill="#6e7681">id: </tspan><tspan fill="#bc8cff">019efa5e-5f2a-7eb0-9ed7-9980495715a5</tspan></text>
+      <animate attributeName="opacity" dur="14s" repeatCount="indefinite"
+        keyTimes="0;0.56;0.58;0.92;1" values="0;0;1;1;0"/>
+      <text x="92" y="484" fill="#6e7681">id: 019efa5e-5f31-7c42-8a16-2b7c9e004db7</text>
     </g>
     <!-- prompt + blinking caret -->
-    <text x="70" y="516" fill="#3fb950">$ </text>
-    <rect x="88" y="503" width="9" height="17" fill="#e6edf3">
+    <text x="70" y="510" fill="#3fb950">$ </text>
+    <rect x="88" y="497" width="9" height="17" fill="#e6edf3">
       <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.45;0.5;0.95;1" dur="1.05s" repeatCount="indefinite"/>
     </rect>
   </g>

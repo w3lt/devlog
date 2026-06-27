@@ -14,6 +14,7 @@ background process.
 | 📓 **Frictionless capture** | One short command — `devlog add "…"` — and the thought is saved. |
 | 📜 **Full history at a glance** | `devlog list` groups every entry by day, most recent day first. |
 | ✅ **Track each entry's state** | Move items between `in_progress`, `done`, and `cancelled` with `devlog set-status`. |
+| 🎨 **Color where it helps** | Status markers, project tags, and ids are color-coded; the global `--color` flag (`auto`/`always`/`never`) keeps output script- and pipe-friendly. |
 | 🏷️ **Group by project** | Tag an entry with `--project` and filter your history down to one project at a time. |
 | 🗃️ **Local-first SQLite** | Your journal lives in `~/.devlog/entries.sqlite`. No cloud, no account. |
 | 🆔 **Time-ordered UUID v7** | IDs encode creation time, so entries sort naturally by when they happened. |

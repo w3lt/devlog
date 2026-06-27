@@ -1,8 +1,17 @@
-use std::io;
+use std::io::{self, Write};
 
+use crate::style::{
+    DATE_STYLE, ENTRY_COUNT_STYLE, ID_LABEL_STYLE, ID_STYLE, PROJECT_STYLE, SEPARATOR_STYLE,
+    TIME_STYLE,
+};
+use anstyle::Style;
 use chrono::{Local, NaiveDate};
 
-use crate::{data::entry::DevLogEntry, store::Store};
+use crate::{
+    data::{entry::DevLogEntry, status::DevLogEntryStatus},
+    store::Store,
+    style,
+};
 
 pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
     match store.get_entries(project.as_deref()) {
@@ -23,39 +32,70 @@ pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
                 }
             }
 
+            let mut out = anstream::stdout().lock();
+
             for (day, day_entries) in groups.iter().rev() {
-                let entry_count = day_entries.len();
-                println!(
-                    "{} · {} {}",
-                    day.format("%A, %Y-%m-%d"),
-                    entry_count,
-                    if entry_count == 1 { "entry" } else { "entries" }
-                );
-                println!();
-
-                for entry in day_entries {
-                    let local_time = entry.created_at.with_timezone(&Local);
-
-                    print!(
-                        "  {} {}  {}",
-                        entry.status.to_ascii(),
-                        local_time.format("%H:%M"),
-                        entry.message,
-                    );
-
-                    if let Some(project_name) = &entry.project_name {
-                        print!(" · {}", project_name);
-                    }
-
-                    println!();
-
-                    println!("      id: {}", entry.id);
-                    println!();
-                }
+                print_day(&mut out, day, day_entries)?;
             }
 
             Ok(())
         }
         Err(e) => Err(io::Error::other(e)),
+    }
+}
+
+fn print_day(out: &mut impl Write, day: &NaiveDate, day_entries: &[DevLogEntry]) -> io::Result<()> {
+    let entry_count = day_entries.len();
+    let entry_count_label = if entry_count == 1 { "entry" } else { "entries" };
+
+    writeln!(
+        out,
+        "{DATE_STYLE}{}{DATE_STYLE:#} {ENTRY_COUNT_STYLE}· {} {}{ENTRY_COUNT_STYLE:#}",
+        day.format("%A, %Y-%m-%d"),
+        entry_count,
+        entry_count_label
+    )?;
+
+    writeln!(out)?;
+
+    for entry in day_entries {
+        let local_time = entry.created_at.with_timezone(&Local);
+        let status_style = style::status_style(&entry.status);
+        let message_style = message_style(&entry.status);
+
+        write!(
+            out,
+            "  {status_style}{}{status_style:#} {TIME_STYLE}{}{TIME_STYLE:#}  {message_style}{}{message_style:#}",
+            entry.status.to_ascii(),
+            local_time.format("%H:%M"),
+            entry.message,
+        )?;
+
+        if let Some(project_name) = &entry.project_name {
+            write!(
+                out,
+                " {SEPARATOR_STYLE}·{SEPARATOR_STYLE:#} {PROJECT_STYLE}{}{PROJECT_STYLE:#}",
+                project_name,
+            )?;
+        }
+
+        writeln!(out)?;
+
+        writeln!(
+            out,
+            "      {ID_LABEL_STYLE}id:{ID_LABEL_STYLE:#} {ID_STYLE}{}{ID_STYLE:#}",
+            entry.id,
+        )?;
+
+        writeln!(out)?;
+    }
+
+    Ok(())
+}
+
+fn message_style(status: &DevLogEntryStatus) -> Style {
+    match status {
+        DevLogEntryStatus::Cancelled => Style::new().strikethrough(),
+        _ => Style::new(),
     }
 }
