@@ -75,7 +75,7 @@ its local `HH:MM` time, the message, and, if the entry is tagged, a
 
 `devlog` colorizes its output so a long history is easy to scan: status markers
 and labels are color-coded (`[~]` yellow, `[✓]` green, `[x]` red), project tags
-and freshly added messages are cyan, and timestamps and ids are dimmed.
+and freshly added messages are cyan, ids are blue, and timestamps are dimmed.
 
 Color is enabled only when writing to a terminal — piping or redirecting drops
 the escape codes automatically. Override that detection with the global
