@@ -1,10 +1,6 @@
 use std::io::{self, Write};
 
-use anstyle::{AnsiColor, Style};
-
-use crate::{data::entry::DevLogEntry, store::Store};
-
-const ITEM_STYLE: Style = AnsiColor::Cyan.on_default().bold();
+use crate::{data::entry::DevLogEntry, store::Store, style::ITEM_STYLE};
 
 pub fn add_entry(store: &mut Store, message: &str, project_name: Option<String>) -> io::Result<()> {
     let new_entry = DevLogEntry::new(message, project_name);

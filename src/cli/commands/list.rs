@@ -1,6 +1,10 @@
 use std::io::{self, Write};
 
-use anstyle::{AnsiColor, Style};
+use crate::style::{
+    DATE_STYLE, ENTRY_COUNT_STYLE, ID_LABEL_STYLE, ID_STYLE, PROJECT_STYLE, SEPARATOR_STYLE,
+    TIME_STYLE,
+};
+use anstyle::Style;
 use chrono::{Local, NaiveDate};
 
 use crate::{
@@ -8,13 +12,6 @@ use crate::{
     store::Store,
     style,
 };
-
-const DATE_STYLE: Style = Style::new().bold();
-const ENTRY_COUNT_STYLE: Style = Style::new().dimmed();
-const TIME_STYLE: Style = Style::new().dimmed().italic();
-const PROJECT_STYLE: Style = AnsiColor::Cyan.on_default().bold();
-const SEPARATOR_STYLE: Style = Style::new().dimmed();
-const ID_STYLE: Style = Style::new().dimmed();
 
 pub fn list_entries(store: &Store, project: Option<String>) -> io::Result<()> {
     match store.get_entries(project.as_deref()) {
@@ -88,7 +85,11 @@ fn print_day(
 
         writeln!(out)?;
 
-        writeln!(out, "      {ID_STYLE}id: {}{ID_STYLE:#}", entry.id,)?;
+        writeln!(
+            out,
+            "      {ID_LABEL_STYLE}id:{ID_LABEL_STYLE:#} {ID_STYLE}{}{ID_STYLE:#}",
+            entry.id,
+        )?;
 
         writeln!(out)?;
     }

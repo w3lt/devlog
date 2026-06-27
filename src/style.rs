@@ -3,6 +3,15 @@ use clap::ValueEnum;
 
 use crate::data::status::DevLogEntryStatus;
 
+pub const DATE_STYLE: Style = Style::new().bold();
+pub const ENTRY_COUNT_STYLE: Style = Style::new().dimmed();
+pub const TIME_STYLE: Style = Style::new().dimmed().italic();
+pub const PROJECT_STYLE: Style = AnsiColor::Cyan.on_default().bold();
+pub const SEPARATOR_STYLE: Style = Style::new().dimmed();
+pub const ID_STYLE: Style = AnsiColor::Blue.on_default();
+pub const ID_LABEL_STYLE: Style = Style::new().dimmed();
+pub const ITEM_STYLE: Style = AnsiColor::Cyan.on_default().bold();
+
 #[derive(Debug, Clone, ValueEnum)]
 pub enum ColorChoice {
     Auto,
